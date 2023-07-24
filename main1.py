@@ -1,17 +1,27 @@
 import streamlit as st
-import plotly.express as px
+import plotly .express as px
+from backend import get_data
+st.title("Weather forecast for the next few days ")
+place=st.text_input("Place")
+days=st.slider("Forecast",max_value=5 , min_value=1 ,help="Select the Number of Forecast Days")
+option=st.selectbox("Select Data to view ",options=("Temperature","Sky"))
+st.subheader(f"{option}for the next {days} days in {place}")
+if place:
+    try:
+        filtered_data = get_data(place, days)
+        if option=="Temperature":
+            data_tem = [dict['main']['temp'] for dict in filtered_data]
+            data_tem=[x/10 for x in data_tem]
+            finish=[round(number ,2 ) for number in data_tem]
+            Date =[dict['dt_txt']for dict in filtered_data]
+            config=px.line(x=Date,y=finish , labels={"X": "Date" , "y":"Temperature"})
+            st.plotly_chart(config)
+        if option=="Sky":
+            images={"Clear":"static/clear.png" , "Clouds":"static/cloud.png","Rain":"static/rain.png","Snow":"static/snow.png"}
+            data_sky=[dict['weather'][0]['main'] for dict in filtered_data]
+            x=[images[condition] for condition in data_sky]
+            print(data_sky)
+            st.image(x ,width=115)
 
-st.header("Wearther Forecast for the Next Days")
-place=st.text_input(label="Place :")
-days=st.slider(label="Forecast Days" ,min_value=1,max_value=5,help="Select the number of the Forecast Days")
-option=st.selectbox("Select data to view ",options=("Temperature"
-                    ,"Sky"))
-st.subheader(f"{option} for the next 2 days in {days}")
-def get_data(days):
-    Date=["2022-25-10","2022-26-10","2022-07-10"]
-    Temperature=[10,11,15]
-    Temperature=[days* i for i in Temperature]
-    return Date,Temperature
-t,x=get_data(days)
-figure=px.line(x=t,y=x,render_mode="SVG",labels={"x":"Date","y":"Temperature (C)"})
-st.plotly_chart(figure)
+    except KeyError:
+        st.write("That place is not exist")
